@@ -4,10 +4,10 @@
 	<!-- ** STEP 1: Include JatoBAS files ** -->
 	<!-- Of course you can also download JatoBAS and include those .js directly from your site -->
 	<!-- However, by linking them externally you get automatic updates -->
-	<script src='http://msx.jannone.org/jatobas/jatobas.js'></script>
-	<script src='http://msx.jannone.org/jatobas/commands.js'></script>
-	<script src='http://msx.jannone.org/jatobas/canvas.js'></script>
-	<script src='http://msx.jannone.org/jatobas/sprites.js'></script>
+	<script src='jatobas.js'></script>
+	<script src='commands.js'></script>
+	<script src='canvas.js'></script>
+	<script src='sprites.js'></script>
 	
 <!-- ** STEP 2: style your tags ** -->
 <!-- You can just copy and paste the CSS below -->
@@ -55,10 +55,12 @@ pre {
 <!-- 
 	** ATTENTION ATTENTION ATTENTION **
 	You must use script type="text/javascript;e4x=1" below, or the CDATA trick wont work
--->
-<script type="text/javascript;e4x=1">
 
-var code = <r><![CDATA[
+	The above is outdated, and that feature has been depreciated. If the point was just to have the code as a single block then template literals work for that
+-->
+<script type="text/javascript">
+
+var code = `
 SCREEN 2
 FOR I=90 TO 0 STEP -8
 CIRCLE(128,96), I, (I/8 MOD 14) + 2: SLEEP 1
@@ -97,7 +99,7 @@ PRINT "An entire site running over JatoBAS"
 PRINT "by Rafael Jannone"
 PRINT "quite useless indeed :)"
 GOTO 50
-]]></r>;
+`;
 
 // ** STEP 5: run your BASIC program! Teach BASIC to your kids :) **
 

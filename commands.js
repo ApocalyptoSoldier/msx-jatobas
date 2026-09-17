@@ -7,6 +7,7 @@ peding set/get impl:
 stopped at CSRLIN
 */
 
+/** @type {Object.<string, ParserCommand>} */
 Parser.commands = {
 	'auto': { signature: ['i...'], notimpl: true },	
 	'beep': { signature: [], notimpl: true },
@@ -44,6 +45,7 @@ Parser.commands = {
 	'sprite': { method: 'cmd_setsprite', signature: 'parseSprite' }
 };
 
+/** @type {Object.<string, ParserFunction>} */
 Parser.functions = {
 	'abs': { signature: ['num'], relay: 'Math.abs' },
 	'asc': { signature: ['str'], method: 'fn_asc' },	
@@ -141,6 +143,10 @@ Parser.prototype.parsePrint = function() {
 	return args;
 }
 
+/**
+ * @param {never} stats 
+ * @param {string?} mark 
+ */
 Parser.prototype.parseInput = function(stats, mark) {
 	mark = (mark == null) ? '?' : mark;
 	var title = mark;
@@ -162,6 +168,7 @@ Parser.prototype.parseLine = function(stats) {
 	return this.commandArguments(sig);
 }
 
+/** @param {never} stats */
 Parser.prototype.parsePut = function(stats) {	
 	if (this.ttk == 'sprite') {
 		this.next();
@@ -202,10 +209,12 @@ Parser.prototype.parseSprite = function() {
 
 // === runtime
 
+/** @param {string} v */
 Interp.prototype.fn_asc = function(v) {
 	return v.charCodeAt(0);
 }
 
+/** @param {number} n */
 Interp.prototype.fn_bin = function(n) {
 	var r = '';	
 	if (n < 0)
@@ -219,21 +228,22 @@ Interp.prototype.fn_bin = function(n) {
 	return r;
 }
 
-Interp.prototype.fn_rnd = function() {
-	return Math.random();
-}
+Interp.prototype.fn_rnd = Math.random
 
+/**
+ * @param {number} times 
+ * @param {string} str 
+ */
 Interp.prototype.fn_string = function(times, str) {
-	var r = '';
-	while (times--)
-		r += str;
-	return r;
+	return str.repeat(times);
 }
 
+/** @param {number} n */
 Interp.prototype.fn_tab = function(n) {
 	return this.fn_string(n, "\t");
 }
 
+/** @param {string} str */
 Interp.prototype.fn_val = function(str) {
 	//@todo: implement more conversions
 	if (str.substr(0, 2).toUpperCase() == '&H') {
@@ -243,22 +253,37 @@ Interp.prototype.fn_val = function(str) {
 	return (isNaN(v)) ? 0 : v;
 }
 
+/** @returns {string} */
 Interp.prototype.fn_str = function(val) {
 	return val.toString();
 }
 
+/**
+ * @param {string} str 
+ * @param {number} idx 
+ * @param {number} len 
+ */
 Interp.prototype.fn_mid = function(str, idx, len) {
 	return str.toString().substr(idx, len);
 }
 
+/**
+ * @param {string} str 
+ * @param {number} len 
+ */
 Interp.prototype.fn_left = function(str, len) {
 	return str.toString().substr(0, len);
 }
 
+/**
+ * @param {string} str 
+ * @param {number} len 
+ */
 Interp.prototype.fn_right = function(str, len) {
 	return str.toString().substr(-len);
 }
 
+/** @param {VarRef} ref */
 Interp.prototype.fn_len = function(ref) {
 	return this.getVar(ref).toString().length;
 }
@@ -267,6 +292,7 @@ Interp.prototype.fn_inkey = function() {
 	return Interp.pressed;
 }
 
+/** @param {number} stick */
 Interp.prototype.fn_stick = function(stick) {
 	if (stick == 0) {
 		var dir = Interp.stick0;
@@ -286,6 +312,7 @@ Interp.prototype.fn_stick = function(stick) {
 	return 0;
 }
 
+/** @param {number} stick */
 Interp.prototype.fn_strig = function(stick) {
 	if (stick == 0) {
 		return Interp.stick0[32] ? -1 : 0;
@@ -301,6 +328,7 @@ Interp.prototype.fn_play = function() {
 	return 0;
 }
 
+/** @param {number} v */
 Interp.prototype.fn_sgn = function(v) {
 	return (v == 0) ? 0 : ((v < 0) ? -1 : 1);
 }
@@ -309,6 +337,7 @@ Interp.prototype.cmd_clear = function() {
 	this.vars = {};
 }
 
+/** @param {...any} */
 Interp.prototype.cmd_print = function() {
 	/**@todo implement "USING" format mask */
 	if (arguments[0].file == null && !this.output) {
@@ -327,6 +356,7 @@ Interp.prototype.cmd_print = function() {
 	}
 }
 
+/** @param {...any} */
 Interp.prototype.cmd_html = function() {
 	if (!this.output)
 		return;
@@ -339,9 +369,12 @@ Interp.prototype.cmd_html = function() {
 	this.output.appendChild(el);
 }
 
+/**
+ * @param {string} title 
+ * @param {VarRef[]} refs 
+ * @param {number?} idx 
+ */
 Interp.prototype.cmd_input = function(title, refs, idx) {
-	var I = this;
-	
 	this.suspend();
 	idx = idx || 0;
 	
@@ -352,20 +385,21 @@ Interp.prototype.cmd_input = function(title, refs, idx) {
 		var input = document.createElement('input');
 		this.cmd_print(title);
 		this.output.appendChild(input);
-		input.onkeypress = function(e) {
+		input.onkeypress = (e) => {
 			e = e || window.event;
 			if (e.keyCode == 13) {
 				var v = input.value;
-				I.setVar(ref, v);
-				I.output.removeChild(input);
-				I.cmd_print(v, "\n");
-				I.cmd_input(title, refs, idx + 1);
+				this.setVar(ref, v);
+				this.output.removeChild(input);
+				this.cmd_print(v, "\n");
+				this.cmd_input(title, refs, idx + 1);
 			}
 		}
 		input.focus();
 	}
 }
 
+/** @param {...VarRef} */
 Interp.prototype.cmd_read = function() {
 	for (var i = 0; i < arguments.length; i++) {
 		var arg = arguments[i];
@@ -374,6 +408,7 @@ Interp.prototype.cmd_read = function() {
 	}
 }
 
+/** @param {string?} label */
 Interp.prototype.cmd_restore = function(label) {
 	this.dataIdx = (label) ? this.parser.dataLabels[label] : 0;
 }
@@ -384,6 +419,10 @@ Interp.prototype.cmd_cls = function() {
 	}
 }
 
+/**
+ * @param {number} mode 
+ * @param {number} submode 
+ */
 Interp.prototype.cmd_screen = function(mode, submode) {
 	this.suspend();
 	this.curPos = [0,0];
@@ -400,14 +439,22 @@ Interp.prototype.cmd_screen = function(mode, submode) {
 			this.spriteCanvas.clearSprites();
 		}
 	}
-	var I = this;
-	setTimeout(function() { I.resume(); }, 1000);
+	setTimeout(() => this.resume(), 1000);
 }
 
+/**
+ * @param {number} fg 
+ * @param {number} bg 
+ * @param {number} border 
+ */
 Interp.prototype.cmd_color = function(fg, bg, border) {
 	this.canvas.setColors(fg, bg, border);
 }
 
+/**
+ * @param {number[]} pair 
+ * @param {number?} c 
+ */
 Interp.prototype.cmd_pset = function(pair, c) {
 	if (c === null) {
 		c = this.canvas.color;
@@ -416,6 +463,12 @@ Interp.prototype.cmd_pset = function(pair, c) {
 	this.curPos = pair;
 }
 
+/**
+ * 
+ * @param {number[][]} seg 
+ * @param {number?} c 
+ * @param {'b' | 'B' | 'bf' | 'BF' | null} type 
+ */
 Interp.prototype.cmd_line = function(seg, c, type) {
 	if (c === null) {
 		c = this.canvas.color;
@@ -434,6 +487,12 @@ Interp.prototype.cmd_line = function(seg, c, type) {
 	this.curPos = dest;
 }
 
+/**
+ * 
+ * @param {number[]} src 
+ * @param {number} rad 
+ * @param {number?} c 
+ */
 Interp.prototype.cmd_circle = function(src, rad, c) {
 	if (c === null) {
 		c = this.canvas.color;
@@ -441,22 +500,33 @@ Interp.prototype.cmd_circle = function(src, rad, c) {
 	this.canvas.circle(_int(src[0]), _int(src[1]), rad, c);
 }
 
+/** @param {number} tim */
 Interp.prototype.cmd_sleep = function(tim) {
-	var I = this;
 	this.suspend();
-	setTimeout(function() { I.resume(); }, tim);
+	setTimeout(() => this.resume() , tim);
 }
 
+/** 
+ * @param {number} idx 
+ * @param {string} data
+ */
 Interp.prototype.cmd_setsprite = function(idx, data) {
 	this.spriteCanvas.setSprite(idx, data);
 }
 
+/**
+ * @param {number[]} idx 
+ * @param {Coord?} coord 
+ * @param {number} color 
+ * @param {number} pat 
+ */
 Interp.prototype.cmd_putsprite = function(idx, coord, color, pat) {
 	var x = coord ? coord[0] : null;
 	var y = coord ? coord[1] : null;	
 	this.spriteCanvas.putSprite(idx, x, y, color, pat);
 }
 
+/** @param {Coord?} coord */
 Interp.prototype.cmd_grp = function(coord) {
 	if (!this.canvas)
 		return;
@@ -468,10 +538,15 @@ Interp.prototype.cmd_grp = function(coord) {
 	this.blitChars(coord, txt);
 }
 
+/**
+ * @param {number} address 
+ * @param {number} value 
+ */
 Interp.prototype.cmd_poke = function(address, value) {
 	this.ram[address] = value;
 }
 
+/** @param {string?} line */
 Interp.prototype.cmd_run = function(line) {
 	this.clear();
 	if (line) {
